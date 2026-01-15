@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/models/expense.dart';
 
 class NewExpense extends StatefulWidget{
-  const NewExpense({super.key});
+  const NewExpense({super.key, required this.onAddExpense});
+
+  final void Function(Expense expense) onAddExpense;
 
   @override
   State<NewExpense> createState() {
@@ -38,6 +40,38 @@ class _NewExpenseState extends State<NewExpense>{
     });
   }
   
+  void _submitExpenseData(){
+    final enteredTitle = _titleController.text;
+    final enteredAmount = double.tryParse(_amountController.text);
+    final selectedDate = _selectedDate;
+
+    if (enteredTitle.isEmpty || enteredAmount == null || enteredAmount <= 0 || selectedDate == null){
+      showDialog(
+        context: context, 
+        builder: (ctx) => AlertDialog(
+          title: const Text('Invalid input'),
+          content: const Text('Please make sure a valid title, amount, date and category was entered.'),
+          actions: [
+            TextButton(onPressed: (){
+              Navigator.pop(ctx);
+            }, child: const Text('Okay'))
+          ],
+        )
+      );
+      return;
+    }
+    widget.onAddExpense(Expense(
+      title: enteredTitle,
+      amount: enteredAmount,
+      date: selectedDate,
+      category: _selectedCategory,
+    ));
+    
+    Navigator.pop(context);
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Padding(padding: EdgeInsets.all(16),
@@ -94,13 +128,12 @@ class _NewExpenseState extends State<NewExpense>{
                               }
 
                               setState(() {
-                                _selectedCategory = value!;
+                                _selectedCategory = value;
                               });
                             }),
                             Spacer(),
                             ElevatedButton(onPressed: (){
-                              // ignore: avoid_print
-                              print(" Title: ${_titleController.text}, Amount: ${_amountController.text} ");
+                              _submitExpenseData();
                             },
                             child: Text('Submit expense')),
                             ElevatedButton.icon(onPressed: (){
